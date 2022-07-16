@@ -15,9 +15,9 @@
 
 > You should have finished the previous:
 
-> - Exercise: Remote Control Using Ansible,
-> - Exercise: Infrastructure Creation, and
-> - Exercise: InfrastructureCD,
+> - Exercise: [Remote Control Using Ansible](https://github.com/OloruntobiOlurombi/Remote-Control-Using-Ansible-2.git),
+> - Exercise: [Infrastructure Creation](https://github.com/OloruntobiOlurombi/Infrastructure-Creation.git), and
+> - Exercise: [InfrastructureCD](https://github.com/OloruntobiOlurombi/InfrastructureCD.git),
 > - And have the following files in your repo and local:
 
 ```
@@ -57,3 +57,54 @@ Resources:
           ToPort: '22'
           CidrIp: 0.0.0.0/0 
 ```    
+> Ensure that the KeyName and ImageID are correct.
+
+## Steps 
+
+> In this exercise, you will work in the "commands" section of the CircleCI config file. There may be many places where we want to rollback your changes. That means we need a "command" so that we can reuse the code.
+
+### Step 1
+
+> Add a command to your Circle CI config file called ***destroy_environments***. This command should use [cloudformation](https://docs.aws.amazon.com/cli/latest/reference/cloudformation/delete-stack.html) delete-stack to delete the stack that the job previously created. It wil look like:
+
+```  
+commands:
+  # Exercise - Rollback 
+  destroy_environment: 
+    steps:
+      - run: 
+          name: Destroy environment 
+          # ${CIRCLE_WORKFLOW_ID} is a Built-in environment variable 
+          # ${CIRCLE_WORKFLOW_ID:0:5} takes the first 5 chars of the variable CIRCLE_CI_WORKFLOW_ID
+          when: on_fail 
+          command: |
+            aws cloudformation delete-stack --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:7}
+
+``` 
+
+### Step 2
+
+> Write a ***create_infrastructure job*** that creates a new stack using the template you just created.
+
+``` 
+ create_infrastructure:
+    docker:
+      - image: amazon/aws-cli 
+    steps: 
+      - checkout 
+      - run:
+          name: Create Cloudformation Stack 
+          command: |
+            aws cloudformation deploy \
+             --template-file template.yml \
+             --stack-name myStack-${CIRCLE_WORKFLOW_ID:0:7} \
+             --region us-east-1  
+      - run: return 1
+      - destroy_environment 
+``` 
+
+> Add the job above in the workflows section, and comment out the previous jobs. It will save you some build time.
+
+> After your pipeline executes successfully, you should be able to verify the stack was created and then deleted. In the end, you should have no additional stacks in your AWS CloudFormation console.
+
+### THE END
