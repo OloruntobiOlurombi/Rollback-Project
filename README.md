@@ -108,6 +108,16 @@ commands:
 
 > Add the job above in the workflows section, and comment out the previous jobs. It will save you some build time.
 
+```
+workflows:
+  my_workflow:
+    jobs:
+      - create_infrastructure
+      # - smoke_test
+```
+
 > After your pipeline executes successfully, you should be able to verify the stack was created and then deleted. In the end, you should have no additional stacks in your AWS CloudFormation console.
+
+![image](https://user-images.githubusercontent.com/40290711/179349247-b5bedb4e-53ec-49b4-87bc-b732b1f56ba2.png)
 
 ### THE END
